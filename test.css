@@ -1,0 +1,23 @@
+/* Test CSS file for Variable Opacity Generator */
+
+:root {
+  /* Base colors that should exist in Figma */
+  --color-primary-500: #3b82f6;
+  --color-secondary-600: #dc2626;
+
+  /* Alpha functions that the plugin should parse */
+  --primary-light: --alpha(var(--color-primary-500) / 50%);
+  --primary-lighter: --alpha(var(--color-primary-500) / 25%);
+  --secondary-light: --alpha(var(--color-secondary-600) / 75%);
+  --secondary-lighter: --alpha(var(--color-secondary-600) / 30%);
+}
+
+.button {
+  background: var(--primary-light);
+  border: 1px solid var(--primary-lighter);
+}
+
+.alert {
+  background: var(--secondary-light);
+  color: var(--secondary-lighter);
+}

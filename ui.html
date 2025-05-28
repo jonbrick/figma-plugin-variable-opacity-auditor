@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Variable Opacity Auditor</title>
+    <style>
+      /* Inline CSS - Required for Figma plugins */
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --primary: 222.2 47.4% 11.2%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96%;
+        --border: 214.3 31.8% 91.4%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --radius: 8px;
+        --success: 142.1 76.2% 36.3%;
+        --warning: 47.9 95.8% 53.1%;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        font-size: 13px;
+        line-height: 1.5;
+        color: hsl(var(--foreground));
+        background-color: hsl(var(--background));
+        padding: 20px;
+      }
+
+      #app {
+        max-width: 100%;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .section {
+        opacity: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* Header */
+      .header {
+        text-align: center;
+        padding: 16px 0;
+        background: hsl(var(--background));
+        border-radius: var(--radius);
+        margin-bottom: 8px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: hsl(var(--foreground));
+        margin-bottom: 4px;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+      }
+
+      .subtitle {
+        color: hsl(var(--muted-foreground));
+        font-size: 14px;
+        font-weight: 500;
+        max-width: 380px;
+        margin: 0 auto;
+        line-height: 1.4;
+      }
+
+      /* Collection Selection */
+      .collection-selection {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 24px;
+        margin-bottom: 16px;
+      }
+
+      .collection-selection h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: hsl(var(--foreground));
+      }
+
+      .collection-row {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .collection-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .collection-row label {
+        font-size: 13px;
+        font-weight: 500;
+        color: hsl(var(--foreground));
+        margin-bottom: 4px;
+      }
+
+      .collection-row small {
+        font-size: 11px;
+        color: hsl(var(--muted-foreground));
+        margin-top: 2px;
+      }
+
+      /* Select */
+      .select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .select:focus {
+        outline: none;
+        border-color: hsl(var(--primary));
+        box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
+      }
+
+      /* Loading */
+      .loading {
+        text-align: center;
+        padding: 60px 24px;
+        background: hsl(var(--card));
+        border-radius: var(--radius);
+        border: 1px solid hsl(var(--border));
+      }
+
+      .loader {
+        width: 28px;
+        height: 28px;
+        border: 3px solid hsl(var(--muted));
+        border-top: 3px solid hsl(var(--primary));
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading p {
+        color: hsl(var(--muted-foreground));
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        border-radius: var(--radius);
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: 1px solid transparent;
+        padding: 0 20px;
+        height: 44px;
+        gap: 8px;
+      }
+
+      .btn:disabled {
+        pointer-events: none;
+        opacity: 0.5;
+      }
+
+      .btn-primary {
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        border: 1px solid hsl(var(--primary));
+      }
+
+      .btn-primary:hover:not(:disabled) {
+        background: hsl(var(--primary) / 0.9);
+      }
+
+      .btn-destructive {
+        background: hsl(var(--destructive));
+        color: hsl(var(--destructive-foreground));
+        border: 1px solid hsl(var(--destructive));
+      }
+
+      .btn-destructive:hover:not(:disabled) {
+        background: hsl(var(--destructive) / 0.9);
+      }
+
+      .btn-secondary {
+        background: hsl(var(--secondary));
+        color: hsl(var(--secondary-foreground));
+        border: 1px solid hsl(var(--border));
+      }
+
+      .btn-secondary:hover:not(:disabled) {
+        background: hsl(var(--accent));
+      }
+
+      .btn-group {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      /* Results */
+      .results {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 24px;
+        margin-top: 16px;
+      }
+
+      .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid hsl(var(--border));
+      }
+
+      .results-header h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: hsl(var(--foreground));
+      }
+
+      .results-summary {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .summary-card {
+        text-align: center;
+        padding: 16px;
+        background: hsl(var(--muted));
+        border-radius: var(--radius);
+      }
+
+      .summary-card .number {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .summary-card .label {
+        font-size: 12px;
+        color: hsl(var(--muted-foreground));
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .summary-card.unused .number {
+        color: hsl(var(--destructive));
+      }
+
+      .summary-card.used .number {
+        color: hsl(var(--success));
+      }
+
+      .summary-card.total .number {
+        color: hsl(var(--primary));
+      }
+
+      /* Variable Lists */
+      .variable-section {
+        margin-bottom: 24px;
+      }
+
+      .variable-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .variable-section h4 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        color: hsl(var(--foreground));
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .variable-section h4 .count {
+        background: hsl(var(--muted));
+        color: hsl(var(--muted-foreground));
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .variable-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+
+      .variable-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        background: hsl(var(--background));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        gap: 12px;
+      }
+
+      .variable-item input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+
+      .variable-info {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .variable-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: hsl(var(--foreground));
+        margin-bottom: 2px;
+      }
+
+      .variable-details {
+        font-size: 11px;
+        color: hsl(var(--muted-foreground));
+      }
+
+      .variable-value {
+        font-size: 11px;
+        color: hsl(var(--muted-foreground));
+        font-family: monospace;
+        background: hsl(var(--muted));
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-top: 4px;
+      }
+
+      /* Empty State */
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: hsl(var(--muted-foreground));
+      }
+
+      .empty-state .icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+      }
+
+      .empty-state h4 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: hsl(var(--foreground));
+      }
+
+      .empty-state p {
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      /* Success/Error Messages */
+      .message {
+        padding: 12px 16px;
+        border-radius: var(--radius);
+        margin-bottom: 16px;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .message.success {
+        background: hsl(var(--success) / 0.1);
+        color: hsl(var(--success));
+        border: 1px solid hsl(var(--success) / 0.2);
+      }
+
+      .message.error {
+        background: hsl(var(--destructive) / 0.1);
+        color: hsl(var(--destructive));
+        border: 1px solid hsl(var(--destructive) / 0.2);
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: hsl(var(--muted));
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: hsl(var(--muted-foreground) / 0.3);
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: hsl(var(--muted-foreground) / 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Header -->
+      <div class="header">
+        <h1>Variable Opacity Auditor</h1>
+        <p class="subtitle">
+          Find and remove unused opacity variables between collections
+        </p>
+      </div>
+
+      <!-- Collection Selection -->
+      <div id="collection-selection" class="section">
+        <div class="collection-selection">
+          <h3>Select Collections to Audit</h3>
+
+          <div class="collection-row">
+            <label for="source-collection">Source Collection</label>
+            <select id="source-collection" class="select">
+              <option value="">Loading collections...</option>
+            </select>
+            <small>Collection containing opacity variables to audit</small>
+          </div>
+
+          <div class="collection-row">
+            <label for="target-collection">Target Collection</label>
+            <select id="target-collection" class="select">
+              <option value="">Loading collections...</option>
+            </select>
+            <small>Collection to check for variable references</small>
+          </div>
+
+          <div class="btn-group">
+            <button id="audit-btn" class="btn btn-primary" disabled>
+              🔍 Start Audit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div id="loading" class="section hidden">
+        <div class="loading">
+          <div class="loader"></div>
+          <p>Auditing opacity variables...</p>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="results" class="section hidden">
+        <div class="results">
+          <div class="results-header">
+            <h3>Audit Results</h3>
+          </div>
+
+          <div class="results-summary">
+            <div class="summary-card total">
+              <div class="number" id="total-count">0</div>
+              <div class="label">Total</div>
+            </div>
+            <div class="summary-card unused">
+              <div class="number" id="unused-count">0</div>
+              <div class="label">Unused</div>
+            </div>
+            <div class="summary-card used">
+              <div class="number" id="used-count">0</div>
+              <div class="label">Used</div>
+            </div>
+          </div>
+
+          <!-- Unused Variables -->
+          <div id="unused-section" class="variable-section">
+            <h4>
+              Unused Opacity Variables
+              <span class="count" id="unused-count-badge">0</span>
+            </h4>
+            <div id="unused-variables" class="variable-list">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Used Variables -->
+          <div id="used-section" class="variable-section">
+            <h4>
+              Used Opacity Variables
+              <span class="count" id="used-count-badge">0</span>
+            </h4>
+            <div id="used-variables" class="variable-list">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button id="select-all-unused" class="btn btn-secondary">
+              Select All Unused
+            </button>
+            <button id="delete-selected" class="btn btn-destructive" disabled>
+              🗑️ Delete Selected
+            </button>
+            <button id="audit-again" class="btn btn-secondary">
+              🔄 Audit Again
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div id="messages"></div>
+    </div>
+
+    <script>
+      // ES5 Compatible JavaScript for Figma Plugin UI
+      console.log("🎨 UI LOADED - Variable Opacity Auditor");
+
+      // Global state
+      var collections = [];
+      var auditResults = null;
+      var selectedVariables = new Set();
+
+      // DOM Elements
+      var sourceCollectionSelect = document.getElementById("source-collection");
+      var targetCollectionSelect = document.getElementById("target-collection");
+      var auditBtn = document.getElementById("audit-btn");
+      var selectAllUnusedBtn = document.getElementById("select-all-unused");
+      var deleteSelectedBtn = document.getElementById("delete-selected");
+      var auditAgainBtn = document.getElementById("audit-again");
+
+      // Sections
+      var collectionSelectionSection = document.getElementById(
+        "collection-selection"
+      );
+      var loadingSection = document.getElementById("loading");
+      var resultsSection = document.getElementById("results");
+      var messagesContainer = document.getElementById("messages");
+
+      // Initialize
+      function init() {
+        console.log("🚀 Initializing UI...");
+
+        // Load collections on startup
+        parent.postMessage({ pluginMessage: { type: "get-collections" } }, "*");
+
+        // Event listeners
+        auditBtn.addEventListener("click", handleAudit);
+        selectAllUnusedBtn.addEventListener("click", handleSelectAllUnused);
+        deleteSelectedBtn.addEventListener("click", handleDeleteSelected);
+        auditAgainBtn.addEventListener("click", handleAuditAgain);
+
+        // Collection selection change handlers
+        sourceCollectionSelect.addEventListener("change", updateAuditButton);
+        targetCollectionSelect.addEventListener("change", updateAuditButton);
+      }
+
+      function updateAuditButton() {
+        var sourceSelected = sourceCollectionSelect.value !== "";
+        var targetSelected = targetCollectionSelect.value !== "";
+        var differentCollections =
+          sourceCollectionSelect.value !== targetCollectionSelect.value;
+
+        auditBtn.disabled = !(
+          sourceSelected &&
+          targetSelected &&
+          differentCollections
+        );
+      }
+
+      function handleAudit() {
+        var sourceCollectionId = sourceCollectionSelect.value;
+        var targetCollectionId = targetCollectionSelect.value;
+
+        if (!sourceCollectionId || !targetCollectionId) {
+          showMessage(
+            "Please select both source and target collections.",
+            "error"
+          );
+          return;
+        }
+
+        if (sourceCollectionId === targetCollectionId) {
+          showMessage(
+            "Source and target collections must be different.",
+            "error"
+          );
+          return;
+        }
+
+        showSection("loading");
+        clearMessages();
+
+        parent.postMessage(
+          {
+            pluginMessage: {
+              type: "audit-variables",
+              sourceCollectionId: sourceCollectionId,
+              targetCollectionId: targetCollectionId,
+            },
+          },
+          "*"
+        );
+      }
+
+      function handleSelectAllUnused() {
+        var checkboxes = document.querySelectorAll(
+          '#unused-variables input[type="checkbox"]'
+        );
+        var allChecked = Array.from(checkboxes).every(function (cb) {
+          return cb.checked;
+        });
+
+        checkboxes.forEach(function (checkbox) {
+          checkbox.checked = !allChecked;
+          handleVariableSelection(checkbox);
+        });
+      }
+
+      function handleDeleteSelected() {
+        if (selectedVariables.size === 0) {
+          showMessage("Please select variables to delete.", "error");
+          return;
+        }
+
+        var variableIds = Array.from(selectedVariables);
+
+        if (
+          confirm(
+            "Are you sure you want to delete " +
+              variableIds.length +
+              " selected variables? This action cannot be undone."
+          )
+        ) {
+          showSection("loading");
+          clearMessages();
+
+          parent.postMessage(
+            {
+              pluginMessage: {
+                type: "delete-variables",
+                variableIds: variableIds,
+              },
+            },
+            "*"
+          );
+        }
+      }
+
+      function handleAuditAgain() {
+        showSection("collection-selection");
+        clearMessages();
+        selectedVariables.clear();
+        updateDeleteButton();
+      }
+
+      function handleVariableSelection(checkbox) {
+        var variableId = checkbox.dataset.variableId;
+
+        if (checkbox.checked) {
+          selectedVariables.add(variableId);
+        } else {
+          selectedVariables.delete(variableId);
+        }
+
+        updateDeleteButton();
+      }
+
+      function updateDeleteButton() {
+        deleteSelectedBtn.disabled = selectedVariables.size === 0;
+        deleteSelectedBtn.textContent =
+          selectedVariables.size > 0
+            ? "🗑️ Delete Selected (" + selectedVariables.size + ")"
+            : "🗑️ Delete Selected";
+      }
+
+      function showSection(sectionName) {
+        collectionSelectionSection.classList.add("hidden");
+        loadingSection.classList.add("hidden");
+        resultsSection.classList.add("hidden");
+
+        switch (sectionName) {
+          case "collection-selection":
+            collectionSelectionSection.classList.remove("hidden");
+            break;
+          case "loading":
+            loadingSection.classList.remove("hidden");
+            break;
+          case "results":
+            resultsSection.classList.remove("hidden");
+            break;
+        }
+      }
+
+      function populateCollectionSelects(collectionsData) {
+        collections = collectionsData;
+
+        // Clear existing options
+        sourceCollectionSelect.innerHTML =
+          '<option value="">Select source collection...</option>';
+        targetCollectionSelect.innerHTML =
+          '<option value="">Select target collection...</option>';
+
+        // Add collection options
+        collections.forEach(function (collection) {
+          var option1 = document.createElement("option");
+          option1.value = collection.id;
+          option1.textContent =
+            collection.name + " (" + collection.variableCount + " variables)";
+          sourceCollectionSelect.appendChild(option1);
+
+          var option2 = document.createElement("option");
+          option2.value = collection.id;
+          option2.textContent =
+            collection.name + " (" + collection.variableCount + " variables)";
+          targetCollectionSelect.appendChild(option2);
+        });
+
+        updateAuditButton();
+      }
+
+      function displayAuditResults(results) {
+        auditResults = results;
+
+        // Update summary
+        document.getElementById("total-count").textContent =
+          results.summary.total;
+        document.getElementById("unused-count").textContent =
+          results.summary.unused;
+        document.getElementById("used-count").textContent =
+          results.summary.used;
+        document.getElementById("unused-count-badge").textContent =
+          results.summary.unused;
+        document.getElementById("used-count-badge").textContent =
+          results.summary.used;
+
+        // Display unused variables
+        var unusedContainer = document.getElementById("unused-variables");
+        unusedContainer.innerHTML = "";
+
+        if (results.unusedVariables.length === 0) {
+          unusedContainer.innerHTML =
+            '<div class="empty-state"><div class="icon">✅</div><h4>No unused variables found</h4><p>All opacity variables are being used in the target collection.</p></div>';
+        } else {
+          results.unusedVariables.forEach(function (variable) {
+            var item = createVariableItem(variable, true);
+            unusedContainer.appendChild(item);
+          });
+        }
+
+        // Display used variables
+        var usedContainer = document.getElementById("used-variables");
+        usedContainer.innerHTML = "";
+
+        if (results.usedVariables.length === 0) {
+          usedContainer.innerHTML =
+            '<div class="empty-state"><div class="icon">❌</div><h4>No used variables found</h4><p>None of the opacity variables are being referenced in the target collection.</p></div>';
+        } else {
+          results.usedVariables.forEach(function (variable) {
+            var item = createVariableItem(variable, false);
+            usedContainer.appendChild(item);
+          });
+        }
+
+        showSection("results");
+        selectedVariables.clear();
+        updateDeleteButton();
+      }
+
+      function createVariableItem(variable, showCheckbox) {
+        var item = document.createElement("div");
+        item.className = "variable-item";
+
+        var html = "";
+
+        if (showCheckbox) {
+          html +=
+            '<input type="checkbox" data-variable-id="' + variable.id + '">';
+        }
+
+        html += '<div class="variable-info">';
+        html +=
+          '<div class="variable-name">' + escapeHtml(variable.name) + "</div>";
+        html +=
+          '<div class="variable-details">Type: ' +
+          variable.resolvedType +
+          "</div>";
+
+        // Show variable values
+        var modeNames = Object.keys(variable.valuesByMode);
+        if (modeNames.length > 0) {
+          var firstMode = modeNames[0];
+          var value = variable.valuesByMode[firstMode].value;
+          html += '<div class="variable-value">' + escapeHtml(value) + "</div>";
+        }
+
+        html += "</div>";
+
+        item.innerHTML = html;
+
+        if (showCheckbox) {
+          var checkbox = item.querySelector('input[type="checkbox"]');
+          checkbox.addEventListener("change", function () {
+            handleVariableSelection(checkbox);
+          });
+        }
+
+        return item;
+      }
+
+      function showMessage(message, type) {
+        var messageEl = document.createElement("div");
+        messageEl.className = "message " + type;
+        messageEl.textContent = message;
+        messagesContainer.appendChild(messageEl);
+
+        // Auto-remove after 5 seconds
+        setTimeout(function () {
+          if (messageEl.parentNode) {
+            messageEl.parentNode.removeChild(messageEl);
+          }
+        }, 5000);
+      }
+
+      function clearMessages() {
+        messagesContainer.innerHTML = "";
+      }
+
+      function escapeHtml(text) {
+        var div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Message handler from plugin
+      window.onmessage = function (event) {
+        var msg = event.data.pluginMessage;
+        if (!msg) return;
+
+        console.log("📨 Received message:", msg.type);
+
+        switch (msg.type) {
+          case "collections-loaded":
+            if (msg.success) {
+              populateCollectionSelects(msg.collections);
+            } else {
+              showMessage("Error loading collections: " + msg.message, "error");
+            }
+            break;
+
+          case "audit-complete":
+            if (msg.success) {
+              displayAuditResults(msg.results);
+              showMessage("Audit completed successfully!", "success");
+            } else {
+              showSection("collection-selection");
+              showMessage("Audit failed: " + msg.message, "error");
+            }
+            break;
+
+          case "deletion-complete":
+            if (msg.success) {
+              var summary = msg.results.summary;
+              showMessage(
+                "Deleted " + summary.deleted + " variables successfully!",
+                "success"
+              );
+
+              if (summary.failed > 0) {
+                showMessage(
+                  "Failed to delete " + summary.failed + " variables.",
+                  "error"
+                );
+              }
+
+              // Refresh the audit
+              handleAudit();
+            } else {
+              showSection("results");
+              showMessage("Deletion failed: " + msg.message, "error");
+            }
+            break;
+
+          default:
+            console.warn("Unknown message type:", msg.type);
+        }
+      };
+
+      // Initialize when DOM is ready
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+      } else {
+        init();
+      }
+
+      console.log("✅ UI READY - Variable Opacity Auditor");
+    </script>
+  </body>
+</html>
