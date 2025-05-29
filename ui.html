@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Variable Opacity Auditor</title>
+    <title>Variables Mapper</title>
     <style>
       /* Inline CSS - Required for Figma plugins */
 
@@ -30,6 +30,7 @@
         --radius: 8px;
         --success: 142.1 76.2% 36.3%;
         --warning: 47.9 95.8% 53.1%;
+        --info: 221.2 83.2% 53.3%;
       }
 
       body {
@@ -39,7 +40,7 @@
         line-height: 1.5;
         color: hsl(var(--foreground));
         background-color: hsl(var(--background));
-        padding: 20px;
+        padding: 16px;
       }
 
       #app {
@@ -53,7 +54,7 @@
         opacity: 1;
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
       }
 
       .hidden {
@@ -63,14 +64,14 @@
       /* Header */
       .header {
         text-align: center;
-        padding: 16px 0;
+        padding: 12px 0;
         background: hsl(var(--background));
         border-radius: var(--radius);
-        margin-bottom: 8px;
+        margin-bottom: 16px;
       }
 
       .header h1 {
-        font-size: 24px;
+        font-size: 20px;
         font-weight: 700;
         color: hsl(var(--foreground));
         margin-bottom: 4px;
@@ -80,69 +81,58 @@
 
       .subtitle {
         color: hsl(var(--muted-foreground));
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 500;
-        max-width: 380px;
+        max-width: 320px;
         margin: 0 auto;
-        line-height: 1.4;
+        line-height: 1.3;
       }
 
-      /* Collection Selection */
-      .collection-selection {
-        background: hsl(var(--card));
-        border: 1px solid hsl(var(--border));
-        border-radius: var(--radius);
-        padding: 24px;
-        margin-bottom: 16px;
-      }
-
-      .collection-selection h3 {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 16px;
-        color: hsl(var(--foreground));
-      }
-
-      .collection-row {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 16px;
-      }
-
-      .collection-row:last-child {
-        margin-bottom: 0;
-      }
-
-      .collection-row label {
-        font-size: 13px;
-        font-weight: 500;
-        color: hsl(var(--foreground));
-        margin-bottom: 4px;
-      }
-
-      .collection-row small {
-        font-size: 11px;
-        color: hsl(var(--muted-foreground));
-        margin-top: 2px;
-      }
-
-      /* Select */
-      .select {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid hsl(var(--border));
-        border-radius: var(--radius);
+      /* Upload area */
+      .upload-area {
+        border: 2px dashed hsl(var(--border));
+        border-radius: calc(var(--radius) + 4px);
+        padding: 24px 20px;
+        text-align: center;
         background: hsl(var(--background));
-        color: hsl(var(--foreground));
-        font-size: 13px;
+        transition: all 0.2s ease;
         cursor: pointer;
       }
 
-      .select:focus {
-        outline: none;
+      .upload-area:hover {
         border-color: hsl(var(--primary));
-        box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
+        background: hsl(var(--accent));
+      }
+
+      .upload-content .upload-icon {
+        font-size: 32px;
+        margin-bottom: 8px;
+        opacity: 0.7;
+      }
+
+      .upload-content h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: hsl(var(--foreground));
+        line-height: 1.3;
+      }
+
+      .upload-content p {
+        color: hsl(var(--muted-foreground));
+        margin-bottom: 12px;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      .supported-formats {
+        text-align: center;
+        margin-top: 8px;
+      }
+
+      .supported-formats small {
+        color: hsl(var(--muted-foreground));
+        font-size: 11px;
       }
 
       /* Loading */
@@ -180,6 +170,217 @@
         line-height: 1.4;
       }
 
+      /* Library Info */
+      .collections-overview {
+        background: hsl(var(--muted) / 0.3);
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 12px 16px;
+        margin-bottom: 12px;
+      }
+
+      .collections-overview h3 {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 0;
+        color: hsl(var(--foreground));
+      }
+
+      .library-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+        padding: 6px 8px;
+        background: hsl(var(--background));
+        border-radius: calc(var(--radius) - 2px);
+        border: 1px solid hsl(var(--border));
+      }
+
+      .library-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .library-main {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .library-name {
+        font-weight: 600;
+        font-size: 12px;
+        color: hsl(var(--foreground));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .library-stats {
+        font-size: 10px;
+        color: hsl(var(--muted-foreground));
+        white-space: nowrap;
+        font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+      }
+
+      .collection-item {
+        font-size: 11px;
+        color: hsl(var(--muted-foreground));
+        margin-left: 12px;
+        font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+      }
+
+      /* Collection grid */
+      .collection-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .collection-card {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 16px;
+      }
+
+      .collection-card-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .collection-icon {
+        font-size: 20px;
+        line-height: 1;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+
+      .collection-title h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: hsl(var(--foreground));
+        margin-bottom: 2px;
+        line-height: 1.2;
+      }
+
+      .collection-title p {
+        color: hsl(var(--muted-foreground));
+        font-size: 12px;
+        line-height: 1.3;
+        margin: 0;
+      }
+
+      .collection-select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+        font-size: 13px;
+        transition: all 0.2s ease;
+      }
+
+      .collection-select:focus {
+        outline: none;
+        border-color: hsl(var(--primary));
+        box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+      }
+
+      .collection-select:disabled {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      /* Responsive collection grid */
+      @media (max-width: 600px) {
+        .collection-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Selected collections info */
+      .selected-collections-info {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        padding: 12px 16px;
+        margin-bottom: 16px;
+      }
+
+      .selected-collections-info h3 {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: hsl(var(--foreground));
+      }
+
+      .selected-collections-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .selected-collection {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 8px 10px;
+        background: hsl(var(--muted) / 0.3);
+        border-radius: calc(var(--radius) - 2px);
+        border: 1px solid hsl(var(--border));
+      }
+
+      .selected-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: hsl(var(--muted-foreground));
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+      }
+
+      .selected-value {
+        font-size: 12px;
+        font-weight: 600;
+        color: hsl(var(--foreground));
+        font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+      }
+
+      /* Responsive selected collections */
+      @media (max-width: 600px) {
+        .selected-collections-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Large collection warning */
+      .large-collection-warning {
+        background: hsl(var(--warning) / 0.1);
+        border: 1px solid hsl(var(--warning) / 0.3);
+        border-radius: var(--radius);
+        padding: 12px 16px;
+        margin-bottom: 16px;
+      }
+
+      .large-collection-warning h4 {
+        font-size: 13px;
+        font-weight: 600;
+        color: hsl(var(--warning));
+        margin-bottom: 4px;
+      }
+
+      .large-collection-warning p {
+        font-size: 12px;
+        color: hsl(var(--muted-foreground));
+        line-height: 1.4;
+      }
+
       /* Buttons */
       .btn {
         display: inline-flex;
@@ -212,16 +413,6 @@
         background: hsl(var(--primary) / 0.9);
       }
 
-      .btn-destructive {
-        background: hsl(var(--destructive));
-        color: hsl(var(--destructive-foreground));
-        border: 1px solid hsl(var(--destructive));
-      }
-
-      .btn-destructive:hover:not(:disabled) {
-        background: hsl(var(--destructive) / 0.9);
-      }
-
       .btn-secondary {
         background: hsl(var(--secondary));
         color: hsl(var(--secondary-foreground));
@@ -229,715 +420,1361 @@
       }
 
       .btn-secondary:hover:not(:disabled) {
-        background: hsl(var(--accent));
-      }
-
-      .btn-group {
-        display: flex;
-        gap: 8px;
-        margin-top: 16px;
-      }
-
-      /* Results */
-      .results {
-        background: hsl(var(--card));
-        border: 1px solid hsl(var(--border));
-        border-radius: var(--radius);
-        padding: 24px;
-        margin-top: 16px;
-      }
-
-      .results-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid hsl(var(--border));
-      }
-
-      .results-header h3 {
-        font-size: 18px;
-        font-weight: 600;
-        color: hsl(var(--foreground));
-      }
-
-      .results-summary {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
-      }
-
-      .summary-card {
-        text-align: center;
-        padding: 16px;
         background: hsl(var(--muted));
-        border-radius: var(--radius);
       }
 
-      .summary-card .number {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 4px;
+      /* Collection groups */
+      .collection-group {
+        margin-bottom: 12px;
       }
 
-      .summary-card .label {
-        font-size: 12px;
-        color: hsl(var(--muted-foreground));
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-
-      .summary-card.unused .number {
-        color: hsl(var(--destructive));
-      }
-
-      .summary-card.used .number {
-        color: hsl(var(--success));
-      }
-
-      .summary-card.total .number {
-        color: hsl(var(--primary));
-      }
-
-      /* Variable Lists */
-      .variable-section {
-        margin-bottom: 24px;
-      }
-
-      .variable-section:last-child {
+      .collection-group:last-child {
         margin-bottom: 0;
       }
 
-      .variable-section h4 {
-        font-size: 14px;
+      .collection-group-header {
+        font-size: 11px;
         font-weight: 600;
-        margin-bottom: 12px;
-        color: hsl(var(--foreground));
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        color: hsl(var(--muted-foreground));
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+        padding-left: 4px;
       }
 
-      .variable-section h4 .count {
-        background: hsl(var(--muted));
+      /* Actions */
+      .actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        padding-top: 8px;
+        padding-bottom: 16px;
+      }
+
+      .actions .btn {
+        width: 100%;
+      }
+
+      .collections-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+
+      .refresh-btn {
+        background: none;
+        border: none;
+        font-size: 14px;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: calc(var(--radius) - 2px);
         color: hsl(var(--muted-foreground));
+        transition: all 0.2s ease;
+      }
+
+      .refresh-btn:hover {
+        background: hsl(var(--muted));
+        color: hsl(var(--foreground));
+      }
+
+      .refresh-btn:active {
+        transform: rotate(180deg);
+      }
+
+      /* Cards */
+      .summary-card,
+      .result-group,
+      .error-card {
+        background: hsl(var(--card));
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+      }
+
+      .summary-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .summary-row {
+        display: flex;
+        gap: 12px;
+      }
+
+      .summary-card {
+        flex: 1;
+        padding: 24px 20px;
+        text-align: center;
+      }
+
+      .summary-card.success {
+        border-color: hsl(var(--success) / 0.3);
+        background: hsl(var(--success) / 0.05);
+      }
+
+      .summary-card.info {
+        border-color: hsl(var(--info) / 0.3);
+        background: hsl(var(--info) / 0.05);
+      }
+
+      .summary-card.warning {
+        border-color: hsl(var(--warning) / 0.3);
+        background: hsl(var(--warning) / 0.05);
+      }
+
+      .summary-card.error {
+        border-color: hsl(var(--destructive) / 0.3);
+        background: hsl(var(--destructive) / 0.05);
+      }
+
+      .summary-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .stat-number {
+        font-size: 32px;
+        font-weight: 800;
+        color: hsl(var(--primary));
+        line-height: 1;
+      }
+
+      .summary-card.success .stat-number {
+        color: hsl(var(--success));
+      }
+
+      .summary-card.info .stat-number {
+        color: hsl(var(--info));
+      }
+
+      .summary-card.warning .stat-number {
+        color: hsl(var(--warning));
+      }
+
+      .summary-card.error .stat-number {
+        color: hsl(var(--destructive));
+      }
+
+      .stat-label {
+        color: hsl(var(--muted-foreground));
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      /* Result groups */
+      .result-group {
+        margin-bottom: 8px;
+        overflow: visible;
+        border: 1px solid hsl(var(--border));
+        border-radius: var(--radius);
+      }
+
+      .result-title {
+        padding: 12px 16px;
+        background: hsl(var(--muted));
+        border-bottom: 1px solid hsl(var(--border));
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0;
+        color: hsl(var(--foreground));
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .result-title:hover {
+        background: hsl(var(--muted) / 0.8);
+      }
+
+      .result-title::after {
+        content: "▼";
+        font-size: 10px;
+        color: hsl(var(--muted-foreground));
+        transition: transform 0.2s ease;
+      }
+
+      .result-group.collapsed .result-title::after {
+        transform: rotate(-90deg);
+      }
+
+      .result-group.collapsed .variable-list {
+        display: none;
+      }
+
+      .result-group.collapsed .result-title {
+        border-bottom: none;
+      }
+
+      .result-count {
+        font-size: 11px;
+        color: hsl(var(--muted-foreground));
+        background: hsl(var(--background));
         padding: 2px 8px;
         border-radius: 12px;
-        font-size: 11px;
         font-weight: 500;
       }
 
       .variable-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        max-height: 200px;
-        overflow-y: auto;
+        padding: 0;
+        max-height: none;
+        overflow-y: visible;
+        transition: all 0.2s ease;
       }
 
       .variable-item {
         display: flex;
-        align-items: center;
-        padding: 12px;
-        background: hsl(var(--background));
-        border: 1px solid hsl(var(--border));
-        border-radius: var(--radius);
+        flex-direction: column;
         gap: 12px;
+        padding: 16px;
+        transition: all 0.2s ease;
+        border-bottom: 1px solid hsl(var(--border));
       }
 
-      .variable-item input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
-        cursor: pointer;
+      .variable-item:last-child {
+        border-bottom: none;
       }
 
-      .variable-info {
-        flex: 1;
-        min-width: 0;
+      .variable-item:hover {
+        background: hsl(var(--muted) / 0.3);
       }
 
       .variable-name {
+        font-weight: 700;
+        color: hsl(var(--foreground));
         font-size: 13px;
+        font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+        line-height: 1.3;
+        word-break: break-all;
+      }
+
+      .variable-references {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        background: hsl(var(--muted) / 0.3);
+        padding: 12px;
+        border-radius: var(--radius);
+        border: 1px solid hsl(var(--border));
+      }
+
+      .reference-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 11px;
+        font-family: "SF Mono", "Menlo", "Monaco", "Courier New", monospace;
+        word-break: break-all;
+      }
+
+      .reference-label {
+        color: hsl(var(--muted-foreground));
         font-weight: 500;
+      }
+
+      .reference-value {
         color: hsl(var(--foreground));
-        margin-bottom: 2px;
-      }
-
-      .variable-details {
-        font-size: 11px;
-        color: hsl(var(--muted-foreground));
-      }
-
-      .variable-value {
-        font-size: 11px;
-        color: hsl(var(--muted-foreground));
-        font-family: monospace;
-        background: hsl(var(--muted));
-        padding: 2px 6px;
-        border-radius: 4px;
-        margin-top: 4px;
-      }
-
-      /* Empty State */
-      .empty-state {
-        text-align: center;
-        padding: 40px 20px;
-        color: hsl(var(--muted-foreground));
-      }
-
-      .empty-state .icon {
-        font-size: 48px;
-        margin-bottom: 16px;
-        opacity: 0.5;
-      }
-
-      .empty-state h4 {
-        font-size: 16px;
         font-weight: 600;
-        margin-bottom: 8px;
-        color: hsl(var(--foreground));
       }
 
-      .empty-state p {
+      .error-text {
+        color: hsl(var(--destructive));
+        font-weight: 500;
+        font-size: 11px;
+        line-height: 1.4;
+        word-break: break-word;
+      }
+
+      /* Error card */
+      .error-card {
+        padding: 32px 24px;
+        text-align: center;
+        border-color: hsl(var(--destructive) / 0.3);
+        background: hsl(var(--destructive) / 0.05);
+      }
+
+      .error-card h3 {
+        color: hsl(var(--destructive));
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        line-height: 1.3;
+      }
+
+      .error-card p {
+        color: hsl(var(--destructive) / 0.8);
+        margin-bottom: 24px;
         font-size: 14px;
         line-height: 1.4;
       }
 
-      /* Success/Error Messages */
-      .message {
-        padding: 12px 16px;
-        border-radius: var(--radius);
-        margin-bottom: 16px;
-        font-size: 13px;
-        font-weight: 500;
-      }
+      /* Responsive */
+      @media (max-width: 480px) {
+        body {
+          padding: 16px;
+        }
 
-      .message.success {
-        background: hsl(var(--success) / 0.1);
-        color: hsl(var(--success));
-        border: 1px solid hsl(var(--success) / 0.2);
-      }
+        .summary-grid {
+          grid-template-columns: 1fr;
+          grid-template-rows: repeat(4, 1fr);
+        }
 
-      .message.error {
-        background: hsl(var(--destructive) / 0.1);
-        color: hsl(var(--destructive));
-        border: 1px solid hsl(var(--destructive) / 0.2);
-      }
+        .actions {
+          flex-direction: column;
+        }
 
-      /* Scrollbar */
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      ::-webkit-scrollbar-track {
-        background: hsl(var(--muted));
-        border-radius: 3px;
-      }
-
-      ::-webkit-scrollbar-thumb {
-        background: hsl(var(--muted-foreground) / 0.3);
-        border-radius: 3px;
-      }
-
-      ::-webkit-scrollbar-thumb:hover {
-        background: hsl(var(--muted-foreground) / 0.5);
+        .btn {
+          width: 100%;
+        }
       }
     </style>
   </head>
   <body>
     <div id="app">
-      <!-- Header -->
       <div class="header">
-        <h1>Variable Opacity Auditor</h1>
+        <h1>Variables Mapper</h1>
         <p class="subtitle">
-          Find and remove unused opacity variables between collections
+          Map CSS @theme variables to Figma variables <br />
+          with shared library references
         </p>
       </div>
 
-      <!-- Collection Selection -->
-      <div id="collection-selection" class="section">
-        <div class="collection-selection">
-          <h3>Select Collections to Audit</h3>
-
-          <div class="collection-row">
-            <label for="source-collection">Source Collection</label>
-            <select id="source-collection" class="select">
-              <option value="">Loading collections...</option>
-            </select>
-            <small>Collection containing opacity variables to audit</small>
-          </div>
-
-          <div class="collection-row">
-            <label for="target-collection">Target Collection</label>
-            <select id="target-collection" class="select">
-              <option value="">Loading collections...</option>
-            </select>
-            <small>Collection to check for variable references</small>
-          </div>
-
-          <div class="btn-group">
-            <button id="audit-btn" class="btn btn-primary" disabled>
-              🔍 Start Audit
+      <div id="collection-section" class="section">
+        <div class="collections-overview" id="library-info">
+          <div class="collections-header">
+            <h3>📚 Available Collections</h3>
+            <button
+              id="refresh-collections-btn"
+              class="refresh-btn"
+              title="Refresh collections"
+            >
+              🔄
             </button>
           </div>
+          <div id="library-list"></div>
+        </div>
+
+        <div class="collection-grid">
+          <div class="collection-card">
+            <div class="collection-card-header">
+              <div class="collection-icon">🏠</div>
+              <div class="collection-title">
+                <h3>Source Collection</h3>
+                <p>Library with design tokens to reference</p>
+              </div>
+            </div>
+            <select id="source-collection-select" class="collection-select">
+              <option value="">Choose source collection...</option>
+            </select>
+          </div>
+
+          <div class="collection-card">
+            <div class="collection-card-header">
+              <div class="collection-icon">🎯</div>
+              <div class="collection-title">
+                <h3>Target Collection</h3>
+                <p>Local collection to create variables in</p>
+              </div>
+            </div>
+            <select id="target-collection-select" class="collection-select">
+              <option value="">Choose target collection...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="preview-btn" class="btn btn-primary" disabled>
+            Next: Upload CSS File
+          </button>
         </div>
       </div>
 
-      <!-- Loading -->
-      <div id="loading" class="section hidden">
+      <div id="upload-section" class="section hidden">
+        <div class="selected-collections-info">
+          <h3>📋 Selected Collections</h3>
+          <div class="selected-collections-grid">
+            <div class="selected-collection">
+              <span class="selected-label">Source:</span>
+              <span id="selected-source" class="selected-value"></span>
+            </div>
+            <div class="selected-collection">
+              <span class="selected-label">Target:</span>
+              <span id="selected-target" class="selected-value"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="upload-area" id="upload-area">
+          <div class="upload-content">
+            <div class="upload-icon">📁</div>
+            <h3>Upload CSS File</h3>
+            <p>Drag & drop your CSS file with @theme variables</p>
+            <input type="file" id="file-input" accept=".css" hidden />
+            <button id="browse-btn" class="btn btn-primary">Choose File</button>
+          </div>
+        </div>
+        <div class="supported-formats">
+          <small>Supported: .css files with @theme and light/dark modes</small>
+        </div>
+        <div class="actions">
+          <button id="back-btn" class="btn btn-secondary">Back</button>
+        </div>
+      </div>
+
+      <div id="json-upload-section" class="section hidden">
+        <div class="selected-collections-info">
+          <h3>📋 Selected Collections</h3>
+          <div class="selected-collections-grid">
+            <div class="selected-collection">
+              <span class="selected-label">Source:</span>
+              <span id="json-selected-source" class="selected-value"></span>
+            </div>
+            <div class="selected-collection">
+              <span class="selected-label">Target:</span>
+              <span id="json-selected-target" class="selected-value"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="large-collection-warning">
+          <h4>⚡ Large Collection Detected</h4>
+          <p>
+            Your source collection has
+            <span id="collection-size-display">500+</span> variables. For
+            optimal performance, upload a JSON export of your variable
+            collection.
+          </p>
+        </div>
+
+        <div class="upload-area" id="json-upload-area">
+          <div class="upload-content">
+            <div class="upload-icon">📄</div>
+            <h3>Upload Variables JSON (Optional)</h3>
+            <p>
+              Export your Figma variables collection as JSON for faster
+              processing
+            </p>
+            <input type="file" id="json-file-input" accept=".json" hidden />
+            <button id="json-browse-btn" class="btn btn-primary">
+              Choose JSON File
+            </button>
+          </div>
+        </div>
+        <div class="supported-formats">
+          <small
+            >Supported: .json files exported from Figma variable
+            collections</small
+          >
+        </div>
+        <div class="actions">
+          <button id="json-skip-btn" class="btn btn-secondary">
+            Skip (Use Standard Method)
+          </button>
+          <button id="json-continue-btn" class="btn btn-primary" disabled>
+            Continue to Preview
+          </button>
+        </div>
+      </div>
+
+      <div id="loading-section" class="section hidden">
         <div class="loading">
           <div class="loader"></div>
-          <p>Auditing opacity variables...</p>
+          <p id="loading-text">Parsing CSS file...</p>
         </div>
       </div>
 
-      <!-- Results -->
-      <div id="results" class="section hidden">
-        <div class="results">
-          <div class="results-header">
-            <h3>Audit Results</h3>
+      <div id="preview-section" class="section hidden">
+        <div class="summary-card">
+          <div class="summary-stat">
+            <span class="stat-number" id="preview-total">0</span>
+            <span class="stat-label">theme variables found</span>
           </div>
+        </div>
 
-          <div class="results-summary">
-            <div class="summary-card total">
-              <div class="number" id="total-count">0</div>
-              <div class="label">Total</div>
-            </div>
-            <div class="summary-card unused">
-              <div class="number" id="unused-count">0</div>
-              <div class="label">Unused</div>
-            </div>
-            <div class="summary-card used">
-              <div class="number" id="used-count">0</div>
-              <div class="label">Used</div>
-            </div>
-          </div>
+        <div class="actions">
+          <button id="apply-btn" class="btn btn-primary" disabled>
+            Apply Changes
+          </button>
+          <button id="cancel-btn" class="btn btn-secondary">Cancel</button>
+        </div>
 
-          <!-- Unused Variables -->
-          <div id="unused-section" class="variable-section">
-            <h4>
-              Unused Opacity Variables
-              <span class="count" id="unused-count-badge">0</span>
-            </h4>
-            <div id="unused-variables" class="variable-list">
-              <!-- Populated by JavaScript -->
-            </div>
-          </div>
+        <h2>👀 Preview</h2>
 
-          <!-- Used Variables -->
-          <div id="used-section" class="variable-section">
-            <h4>
-              Used Opacity Variables
-              <span class="count" id="used-count-badge">0</span>
-            </h4>
-            <div id="used-variables" class="variable-list">
-              <!-- Populated by JavaScript -->
-            </div>
-          </div>
-
-          <div class="btn-group">
-            <button id="select-all-unused" class="btn btn-secondary">
-              Select All Unused
-            </button>
-            <button id="delete-selected" class="btn btn-destructive" disabled>
-              🗑️ Delete Selected
-            </button>
-            <button id="audit-again" class="btn btn-secondary">
-              🔄 Audit Again
-            </button>
-          </div>
+        <div id="preview-variables" class="result-group">
+          <h3 class="result-title">🎨 Variables to Create</h3>
+          <div id="preview-variables-list" class="variable-list"></div>
         </div>
       </div>
 
-      <!-- Messages -->
-      <div id="messages"></div>
+      <div id="results-section" class="section hidden">
+        <h2>🎉 Results</h2>
+
+        <div class="summary-grid">
+          <div class="summary-row">
+            <div class="summary-card success">
+              <div class="summary-stat">
+                <span class="stat-number" id="created-count">0</span>
+                <span class="stat-label">✅ Created</span>
+              </div>
+            </div>
+            <div class="summary-card info">
+              <div class="summary-stat">
+                <span class="stat-number" id="updated-count">0</span>
+                <span class="stat-label">🔄 Updated</span>
+              </div>
+            </div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-card error">
+              <div class="summary-stat">
+                <span class="stat-number" id="removed-count">0</span>
+                <span class="stat-label">🗑️ Removed</span>
+              </div>
+            </div>
+            <div class="summary-card warning">
+              <div class="summary-stat">
+                <span class="stat-number" id="failed-count">0</span>
+                <span class="stat-label">⚠️ Failed</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button id="upload-new-btn" class="btn btn-secondary">
+            Upload New File
+          </button>
+          <button id="close-btn" class="btn btn-primary">Close</button>
+        </div>
+
+        <div id="results-created" class="result-group">
+          <h3 class="result-title">✅ Created Variables</h3>
+          <div id="results-created-list" class="variable-list"></div>
+        </div>
+
+        <div id="results-updated" class="result-group">
+          <h3 class="result-title">🔄 Updated Variables</h3>
+          <div id="results-updated-list" class="variable-list"></div>
+        </div>
+
+        <div id="results-removed" class="result-group">
+          <h3 class="result-title">🗑️ Removed Variables</h3>
+          <div id="results-removed-list" class="variable-list"></div>
+        </div>
+
+        <div id="results-failed" class="result-group">
+          <h3 class="result-title">⚠️ Failed Variables</h3>
+          <div id="results-failed-list" class="variable-list"></div>
+        </div>
+      </div>
+
+      <div id="error-section" class="section hidden">
+        <div class="error-card">
+          <h3>⚠️ Error</h3>
+          <p id="error-message">Something went wrong.</p>
+          <button id="retry-btn" class="btn btn-primary">
+            Upload New File
+          </button>
+        </div>
+      </div>
     </div>
 
     <script>
-      // ES5 Compatible JavaScript for Figma Plugin UI
-      console.log("🎨 UI LOADED - Variable Opacity Auditor");
+      console.log("Plugin UI loaded");
 
-      // Global state
-      var collections = [];
-      var auditResults = null;
-      var selectedVariables = new Set();
+      var isProcessing = false;
+      var currentResults = null;
+      var availableCollections = [];
+      var libraryCollections = [];
+      var localCollections = [];
+      var selectedSourceCollection = null;
+      var uploadedJsonData = null;
 
-      // DOM Elements
-      var sourceCollectionSelect = document.getElementById("source-collection");
-      var targetCollectionSelect = document.getElementById("target-collection");
-      var auditBtn = document.getElementById("audit-btn");
-      var selectAllUnusedBtn = document.getElementById("select-all-unused");
-      var deleteSelectedBtn = document.getElementById("delete-selected");
-      var auditAgainBtn = document.getElementById("audit-again");
+      document.addEventListener("DOMContentLoaded", function () {
+        var elements = {
+          fileInput: document.getElementById("file-input"),
+          browseBtn: document.getElementById("browse-btn"),
+          uploadArea: document.getElementById("upload-area"),
+          jsonFileInput: document.getElementById("json-file-input"),
+          jsonBrowseBtn: document.getElementById("json-browse-btn"),
+          jsonUploadArea: document.getElementById("json-upload-area"),
+          jsonSkipBtn: document.getElementById("json-skip-btn"),
+          jsonContinueBtn: document.getElementById("json-continue-btn"),
+          sourceCollectionSelect: document.getElementById(
+            "source-collection-select"
+          ),
+          targetCollectionSelect: document.getElementById(
+            "target-collection-select"
+          ),
+          previewBtn: document.getElementById("preview-btn"),
+          backBtn: document.getElementById("back-btn"),
+          uploadNewBtn: document.getElementById("upload-new-btn"),
+          closeBtn: document.getElementById("close-btn"),
+          retryBtn: document.getElementById("retry-btn"),
+          cancelBtn: document.getElementById("cancel-btn"),
+          applyBtn: document.getElementById("apply-btn"),
+          loadingText: document.getElementById("loading-text"),
+          selectedInfo: document.getElementById("selected-info"),
+          selectedSource: document.getElementById("selected-source"),
+          selectedTarget: document.getElementById("selected-target"),
+          jsonSelectedSource: document.getElementById("json-selected-source"),
+          jsonSelectedTarget: document.getElementById("json-selected-target"),
+          collectionSizeDisplay: document.getElementById(
+            "collection-size-display"
+          ),
+          refreshCollectionsBtn: document.getElementById(
+            "refresh-collections-btn"
+          ),
+        };
 
-      // Sections
-      var collectionSelectionSection = document.getElementById(
-        "collection-selection"
-      );
-      var loadingSection = document.getElementById("loading");
-      var resultsSection = document.getElementById("results");
-      var messagesContainer = document.getElementById("messages");
+        // File input listeners
+        if (elements.fileInput) {
+          elements.fileInput.addEventListener("change", function (event) {
+            if (isProcessing) return;
+            var file = event.target.files[0];
+            if (file) processFile(file);
+          });
+        }
 
-      // Initialize
-      function init() {
-        console.log("🚀 Initializing UI...");
+        if (elements.jsonFileInput) {
+          elements.jsonFileInput.addEventListener("change", function (event) {
+            if (isProcessing) return;
+            var file = event.target.files[0];
+            if (file) processJsonFile(file);
+          });
+        }
 
-        // Load collections on startup
+        // Button listeners
+        if (elements.browseBtn) {
+          elements.browseBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            if (!isProcessing && elements.fileInput) elements.fileInput.click();
+          });
+        }
+
+        if (elements.jsonBrowseBtn) {
+          elements.jsonBrowseBtn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            if (!isProcessing && elements.jsonFileInput)
+              elements.jsonFileInput.click();
+          });
+        }
+
+        if (elements.uploadArea) {
+          elements.uploadArea.addEventListener("click", function (e) {
+            if (
+              e.target === elements.browseBtn ||
+              (elements.browseBtn && elements.browseBtn.contains(e.target))
+            )
+              return;
+            if (!isProcessing && elements.fileInput) elements.fileInput.click();
+          });
+        }
+
+        if (elements.jsonUploadArea) {
+          elements.jsonUploadArea.addEventListener("click", function (e) {
+            if (
+              e.target === elements.jsonBrowseBtn ||
+              (elements.jsonBrowseBtn &&
+                elements.jsonBrowseBtn.contains(e.target))
+            )
+              return;
+            if (!isProcessing && elements.jsonFileInput)
+              elements.jsonFileInput.click();
+          });
+        }
+
+        if (elements.sourceCollectionSelect) {
+          elements.sourceCollectionSelect.addEventListener(
+            "change",
+            updatePreviewButton
+          );
+        }
+
+        if (elements.targetCollectionSelect) {
+          elements.targetCollectionSelect.addEventListener(
+            "change",
+            updatePreviewButton
+          );
+        }
+
+        if (elements.previewBtn) {
+          elements.previewBtn.addEventListener("click", function () {
+            updateSelectedInfo();
+            showSection("upload-section");
+          });
+        }
+
+        if (elements.backBtn) {
+          elements.backBtn.addEventListener("click", function () {
+            showSection("collection-section");
+          });
+        }
+
+        if (elements.jsonSkipBtn) {
+          elements.jsonSkipBtn.addEventListener("click", function () {
+            uploadedJsonData = null;
+            showSection("preview-section");
+          });
+        }
+
+        if (elements.jsonContinueBtn) {
+          elements.jsonContinueBtn.addEventListener("click", function () {
+            if (currentResults) {
+              displayPreview(currentResults);
+            }
+            showSection("preview-section");
+          });
+        }
+
+        if (elements.cancelBtn) {
+          elements.cancelBtn.addEventListener("click", resetToUpload);
+        }
+        if (elements.uploadNewBtn) {
+          elements.uploadNewBtn.addEventListener("click", resetToUpload);
+        }
+        if (elements.retryBtn) {
+          elements.retryBtn.addEventListener("click", resetToUpload);
+        }
+
+        if (elements.applyBtn) {
+          elements.applyBtn.addEventListener("click", function () {
+            var selectedSourceCollection =
+              elements.sourceCollectionSelect.value;
+            var selectedTargetCollection =
+              elements.targetCollectionSelect.value;
+
+            if (
+              currentResults &&
+              currentResults.variables &&
+              selectedSourceCollection &&
+              selectedTargetCollection
+            ) {
+              // Find source collection type
+              var sourceCollectionType = "local"; // default
+              for (var i = 0; i < availableCollections.length; i++) {
+                if (availableCollections[i].id === selectedSourceCollection) {
+                  sourceCollectionType = availableCollections[i].type;
+                  break;
+                }
+              }
+
+              createVariables(
+                currentResults.variables,
+                selectedSourceCollection,
+                sourceCollectionType,
+                "existing", // Always use existing collection
+                selectedTargetCollection
+              );
+            }
+          });
+        }
+
+        if (elements.closeBtn) {
+          elements.closeBtn.addEventListener("click", function () {
+            parent.postMessage(
+              { pluginMessage: { type: "close-plugin" } },
+              "*"
+            );
+          });
+        }
+
+        if (elements.refreshCollectionsBtn) {
+          elements.refreshCollectionsBtn.addEventListener(
+            "click",
+            loadCollections
+          );
+        }
+
+        // Message handler
+        window.onmessage = function (event) {
+          var pluginMessage = event.data.pluginMessage;
+          var type = pluginMessage.type;
+          var success = pluginMessage.success;
+          var results = pluginMessage.results;
+          var message = pluginMessage.message;
+          var sourceCollections = pluginMessage.sourceCollections;
+          var targetCollections = pluginMessage.targetCollections;
+          var warning = pluginMessage.warning;
+
+          switch (type) {
+            case "collections-loaded":
+              if (success) {
+                availableCollections = sourceCollections;
+                libraryCollections = sourceCollections.filter(function (c) {
+                  return c.type === "library";
+                });
+                localCollections = sourceCollections.filter(function (c) {
+                  return c.type === "local";
+                });
+                displayCollectionInfo(sourceCollections);
+                populateCollections(libraryCollections, localCollections);
+                if (warning) {
+                  console.warn("⚠️ " + warning);
+                }
+              } else {
+                displayError(message || "Failed to load collections");
+              }
+              break;
+
+            case "parsing-complete":
+              isProcessing = false;
+              if (success) {
+                currentResults = results;
+
+                // Check if we need JSON upload
+                if (
+                  selectedSourceCollection &&
+                  selectedSourceCollection.variableCount >= 500
+                ) {
+                  showJsonUploadSection();
+                } else {
+                  displayPreview(currentResults);
+                  showSection("preview-section");
+                }
+              } else {
+                displayError(message);
+                showSection("error-section");
+              }
+              break;
+
+            case "creation-complete":
+              isProcessing = false;
+              if (success) {
+                displayCreationResults(results);
+                showSection("results-section");
+              } else {
+                displayError(message);
+                showSection("error-section");
+              }
+              break;
+          }
+        };
+
+        function updatePreviewButton() {
+          var source = elements.sourceCollectionSelect.value;
+          var target = elements.targetCollectionSelect.value;
+          elements.previewBtn.disabled = !(source && target);
+
+          // Store selected source collection for size checking
+          if (source) {
+            selectedSourceCollection = availableCollections.find(function (c) {
+              return c.id === source;
+            });
+          }
+        }
+
+        function updateSelectedInfo() {
+          var sourceIdx = elements.sourceCollectionSelect.selectedIndex;
+          var targetIdx = elements.targetCollectionSelect.selectedIndex;
+          var sourceOption = elements.sourceCollectionSelect.options[sourceIdx];
+          var targetOption = elements.targetCollectionSelect.options[targetIdx];
+
+          // Find the original collection objects
+          var sourceCollection = availableCollections.find(function (c) {
+            return c.id === sourceOption.value;
+          });
+
+          var displayName = sourceCollection
+            ? sourceCollection.displayName
+            : sourceOption.text;
+          var targetName = targetOption.text;
+
+          elements.selectedSource.innerHTML = displayName;
+          elements.selectedTarget.innerHTML = targetName;
+
+          // Also update JSON section
+          elements.jsonSelectedSource.innerHTML = displayName;
+          elements.jsonSelectedTarget.innerHTML = targetName;
+        }
+
+        function showJsonUploadSection() {
+          // Update collection size display
+          elements.collectionSizeDisplay.innerHTML =
+            selectedSourceCollection.variableCount;
+
+          // Update selected collections info
+          updateSelectedInfo();
+
+          showSection("json-upload-section");
+        }
+
+        function populateCollections(libs, locals) {
+          libraryCollections = libs;
+          localCollections = locals;
+          var sourceSel = elements.sourceCollectionSelect;
+          var targetSel = elements.targetCollectionSelect;
+          sourceSel.innerHTML = "";
+          targetSel.innerHTML = "";
+
+          // Add default options
+          sourceSel.innerHTML =
+            '<option value="">Choose source collection...</option>';
+          targetSel.innerHTML =
+            '<option value="">Choose target collection...</option>';
+
+          // Add library collections to source
+          for (var i = 0; i < libs.length; i++) {
+            var opt = document.createElement("option");
+            opt.value = libs[i].id;
+            opt.text =
+              libs[i].displayName ||
+              libs[i].libraryName + " → " + libs[i].collectionName;
+            sourceSel.appendChild(opt);
+          }
+
+          // Add local collections to target
+          for (var j = 0; j < locals.length; j++) {
+            var opt2 = document.createElement("option");
+            opt2.value = locals[j].id;
+            // Remove "(Local)" suffix if present since it's redundant in the target dropdown
+            opt2.text = locals[j].displayName
+              ? locals[j].displayName.replace(" (Local)", "")
+              : locals[j].collectionName;
+            targetSel.appendChild(opt2);
+          }
+
+          // Default to first library and first local
+          if (libs.length > 0) {
+            sourceSel.value = libs[0].id;
+            selectedSourceCollection = libs[0];
+          }
+          if (locals.length > 0) targetSel.value = locals[0].id;
+          updatePreviewButton();
+        }
+
+        // Load collections on page load
+        loadCollections();
+
+        // Add accordion functionality to result groups
+        document.addEventListener("click", function (e) {
+          if (e.target.classList.contains("result-title")) {
+            var resultGroup = e.target.closest(".result-group");
+            if (resultGroup) {
+              resultGroup.classList.toggle("collapsed");
+            }
+          }
+        });
+      });
+
+      function processFile(file) {
+        if (isProcessing) return;
+        isProcessing = true;
+
+        if (!file.name.endsWith(".css")) {
+          displayError("Please upload a CSS file (.css extension required).");
+          showSection("error-section");
+          isProcessing = false;
+          return;
+        }
+
+        showSection("loading-section");
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          parent.postMessage(
+            {
+              pluginMessage: { type: "parse-css", cssContent: e.target.result },
+            },
+            "*"
+          );
+        };
+
+        reader.onerror = function () {
+          console.error("File read error");
+          displayError("Error reading file. Please try again.");
+          showSection("error-section");
+          isProcessing = false;
+        };
+
+        reader.readAsText(file);
+      }
+
+      function processJsonFile(file) {
+        if (isProcessing) return;
+
+        if (!file.name.endsWith(".json")) {
+          displayError("Please upload a JSON file (.json extension required).");
+          return;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            uploadedJsonData = JSON.parse(e.target.result);
+            console.log(
+              "JSON data loaded:",
+              Object.keys(uploadedJsonData).length + " variables"
+            );
+
+            // Enable continue button
+            var continueBtn = document.getElementById("json-continue-btn");
+            if (continueBtn) {
+              continueBtn.disabled = false;
+              continueBtn.innerHTML =
+                "Continue to Preview (" +
+                Object.keys(uploadedJsonData).length +
+                " variables loaded)";
+            }
+          } catch (error) {
+            console.error("JSON parse error:", error);
+            displayError(
+              "Invalid JSON file. Please check the format and try again."
+            );
+            uploadedJsonData = null;
+          }
+        };
+
+        reader.onerror = function () {
+          console.error("JSON file read error");
+          displayError("Error reading JSON file. Please try again.");
+          uploadedJsonData = null;
+        };
+
+        reader.readAsText(file);
+      }
+
+      function loadCollections() {
+        document.getElementById("loading-text").textContent =
+          "Loading collections...";
         parent.postMessage({ pluginMessage: { type: "get-collections" } }, "*");
-
-        // Event listeners
-        auditBtn.addEventListener("click", handleAudit);
-        selectAllUnusedBtn.addEventListener("click", handleSelectAllUnused);
-        deleteSelectedBtn.addEventListener("click", handleDeleteSelected);
-        auditAgainBtn.addEventListener("click", handleAuditAgain);
-
-        // Collection selection change handlers
-        sourceCollectionSelect.addEventListener("change", updateAuditButton);
-        targetCollectionSelect.addEventListener("change", updateAuditButton);
       }
 
-      function updateAuditButton() {
-        var sourceSelected = sourceCollectionSelect.value !== "";
-        var targetSelected = targetCollectionSelect.value !== "";
-        var differentCollections =
-          sourceCollectionSelect.value !== targetCollectionSelect.value;
+      function createVariables(
+        variables,
+        selectedSourceCollectionId,
+        sourceCollectionType,
+        collectionChoice,
+        existingCollectionId
+      ) {
+        if (isProcessing) return;
+        isProcessing = true;
 
-        auditBtn.disabled = !(
-          sourceSelected &&
-          targetSelected &&
-          differentCollections
-        );
-      }
-
-      function handleAudit() {
-        var sourceCollectionId = sourceCollectionSelect.value;
-        var targetCollectionId = targetCollectionSelect.value;
-
-        if (!sourceCollectionId || !targetCollectionId) {
-          showMessage(
-            "Please select both source and target collections.",
-            "error"
-          );
-          return;
-        }
-
-        if (sourceCollectionId === targetCollectionId) {
-          showMessage(
-            "Source and target collections must be different.",
-            "error"
-          );
-          return;
-        }
-
-        showSection("loading");
-        clearMessages();
+        document.getElementById("loading-text").textContent =
+          "Creating variables...";
+        showSection("loading-section");
 
         parent.postMessage(
           {
             pluginMessage: {
-              type: "audit-variables",
-              sourceCollectionId: sourceCollectionId,
-              targetCollectionId: targetCollectionId,
+              type: "create-variables",
+              variablesToCreate: variables,
+              selectedSourceCollectionId: selectedSourceCollectionId,
+              sourceCollectionType: sourceCollectionType,
+              collectionChoice: collectionChoice,
+              existingCollectionId: existingCollectionId,
+              jsonData: uploadedJsonData, // Pass JSON data to plugin
             },
           },
           "*"
         );
       }
 
-      function handleSelectAllUnused() {
-        var checkboxes = document.querySelectorAll(
-          '#unused-variables input[type="checkbox"]'
-        );
-        var allChecked = Array.from(checkboxes).every(function (cb) {
-          return cb.checked;
-        });
+      function displayCollectionInfo(collections) {
+        var collectionList = document.getElementById("library-list");
 
-        checkboxes.forEach(function (checkbox) {
-          checkbox.checked = !allChecked;
-          handleVariableSelection(checkbox);
-        });
-      }
-
-      function handleDeleteSelected() {
-        if (selectedVariables.size === 0) {
-          showMessage("Please select variables to delete.", "error");
+        if (!collections || collections.length === 0) {
+          collectionList.innerHTML =
+            '<div style="color: hsl(var(--muted-foreground)); font-style: italic; text-align: center; padding: 8px;">No variable collections found</div>';
           return;
         }
 
-        var variableIds = Array.from(selectedVariables);
-
-        if (
-          confirm(
-            "Are you sure you want to delete " +
-              variableIds.length +
-              " selected variables? This action cannot be undone."
-          )
-        ) {
-          showSection("loading");
-          clearMessages();
-
-          parent.postMessage(
-            {
-              pluginMessage: {
-                type: "delete-variables",
-                variableIds: variableIds,
-              },
-            },
-            "*"
-          );
-        }
-      }
-
-      function handleAuditAgain() {
-        showSection("collection-selection");
-        clearMessages();
-        selectedVariables.clear();
-        updateDeleteButton();
-      }
-
-      function handleVariableSelection(checkbox) {
-        var variableId = checkbox.dataset.variableId;
-
-        if (checkbox.checked) {
-          selectedVariables.add(variableId);
-        } else {
-          selectedVariables.delete(variableId);
-        }
-
-        updateDeleteButton();
-      }
-
-      function updateDeleteButton() {
-        deleteSelectedBtn.disabled = selectedVariables.size === 0;
-        deleteSelectedBtn.textContent =
-          selectedVariables.size > 0
-            ? "🗑️ Delete Selected (" + selectedVariables.size + ")"
-            : "🗑️ Delete Selected";
-      }
-
-      function showSection(sectionName) {
-        collectionSelectionSection.classList.add("hidden");
-        loadingSection.classList.add("hidden");
-        resultsSection.classList.add("hidden");
-
-        switch (sectionName) {
-          case "collection-selection":
-            collectionSelectionSection.classList.remove("hidden");
-            break;
-          case "loading":
-            loadingSection.classList.remove("hidden");
-            break;
-          case "results":
-            resultsSection.classList.remove("hidden");
-            break;
-        }
-      }
-
-      function populateCollectionSelects(collectionsData) {
-        collections = collectionsData;
-
-        // Clear existing options
-        sourceCollectionSelect.innerHTML =
-          '<option value="">Select source collection...</option>';
-        targetCollectionSelect.innerHTML =
-          '<option value="">Select target collection...</option>';
-
-        // Add collection options
-        collections.forEach(function (collection) {
-          var option1 = document.createElement("option");
-          option1.value = collection.id;
-          option1.textContent =
-            collection.name + " (" + collection.variableCount + " variables)";
-          sourceCollectionSelect.appendChild(option1);
-
-          var option2 = document.createElement("option");
-          option2.value = collection.id;
-          option2.textContent =
-            collection.name + " (" + collection.variableCount + " variables)";
-          targetCollectionSelect.appendChild(option2);
+        // Group collections by type, preserving original order
+        var libraryCollections = collections.filter(function (c) {
+          return c.type === "library";
         });
-
-        updateAuditButton();
-      }
-
-      function displayAuditResults(results) {
-        auditResults = results;
-
-        // Update summary
-        document.getElementById("total-count").textContent =
-          results.summary.total;
-        document.getElementById("unused-count").textContent =
-          results.summary.unused;
-        document.getElementById("used-count").textContent =
-          results.summary.used;
-        document.getElementById("unused-count-badge").textContent =
-          results.summary.unused;
-        document.getElementById("used-count-badge").textContent =
-          results.summary.used;
-
-        // Display unused variables
-        var unusedContainer = document.getElementById("unused-variables");
-        unusedContainer.innerHTML = "";
-
-        if (results.unusedVariables.length === 0) {
-          unusedContainer.innerHTML =
-            '<div class="empty-state"><div class="icon">✅</div><h4>No unused variables found</h4><p>All opacity variables are being used in the target collection.</p></div>';
-        } else {
-          results.unusedVariables.forEach(function (variable) {
-            var item = createVariableItem(variable, true);
-            unusedContainer.appendChild(item);
-          });
-        }
-
-        // Display used variables
-        var usedContainer = document.getElementById("used-variables");
-        usedContainer.innerHTML = "";
-
-        if (results.usedVariables.length === 0) {
-          usedContainer.innerHTML =
-            '<div class="empty-state"><div class="icon">❌</div><h4>No used variables found</h4><p>None of the opacity variables are being referenced in the target collection.</p></div>';
-        } else {
-          results.usedVariables.forEach(function (variable) {
-            var item = createVariableItem(variable, false);
-            usedContainer.appendChild(item);
-          });
-        }
-
-        showSection("results");
-        selectedVariables.clear();
-        updateDeleteButton();
-      }
-
-      function createVariableItem(variable, showCheckbox) {
-        var item = document.createElement("div");
-        item.className = "variable-item";
+        var localCollections = collections.filter(function (c) {
+          return c.type === "local";
+        });
 
         var html = "";
 
-        if (showCheckbox) {
+        // Library collections
+        if (libraryCollections.length > 0) {
+          html += '<div class="collection-group">';
           html +=
-            '<input type="checkbox" data-variable-id="' + variable.id + '">';
+            '<div class="collection-group-header">📚 Library Collections</div>';
+          for (var i = 0; i < libraryCollections.length; i++) {
+            html += createCollectionItem(libraryCollections[i]);
+          }
+          html += "</div>";
         }
 
-        html += '<div class="variable-info">';
+        // Local collections
+        if (localCollections.length > 0) {
+          html += '<div class="collection-group">';
+          html +=
+            '<div class="collection-group-header">📁 Local Collections</div>';
+          for (var j = 0; j < localCollections.length; j++) {
+            html += createCollectionItem(localCollections[j]);
+          }
+          html += "</div>";
+        }
+
+        collectionList.innerHTML = html;
+      }
+
+      function createCollectionItem(collection) {
+        var html = '<div class="library-item">';
+        html += '<div class="library-main">';
         html +=
-          '<div class="variable-name">' + escapeHtml(variable.name) + "</div>";
-        html +=
-          '<div class="variable-details">Type: ' +
-          variable.resolvedType +
+          '<div class="library-name">' +
+          (collection.type === "library"
+            ? collection.displayName
+            : collection.displayName || collection.collectionName) +
           "</div>";
-
-        // Show variable values
-        var modeNames = Object.keys(variable.valuesByMode);
-        if (modeNames.length > 0) {
-          var firstMode = modeNames[0];
-          var value = variable.valuesByMode[firstMode].value;
-          html += '<div class="variable-value">' + escapeHtml(value) + "</div>";
-        }
-
+        html += "</div>";
+        html +=
+          '<div class="library-stats">' +
+          collection.variableCount +
+          " vars" +
+          (collection.modeCount
+            ? " • " + collection.modeCount + " modes"
+            : "") +
+          "</div>";
         html += "</div>";
 
-        item.innerHTML = html;
-
-        if (showCheckbox) {
-          var checkbox = item.querySelector('input[type="checkbox"]');
-          checkbox.addEventListener("change", function () {
-            handleVariableSelection(checkbox);
-          });
-        }
-
-        return item;
+        return html;
       }
 
-      function showMessage(message, type) {
-        var messageEl = document.createElement("div");
-        messageEl.className = "message " + type;
-        messageEl.textContent = message;
-        messagesContainer.appendChild(messageEl);
+      function showSection(sectionId) {
+        var sections = [
+          "collection-section",
+          "upload-section",
+          "json-upload-section",
+          "loading-section",
+          "preview-section",
+          "results-section",
+          "error-section",
+        ];
+        for (var i = 0; i < sections.length; i++) {
+          var section = document.getElementById(sections[i]);
+          if (section)
+            section.className =
+              "section" + (sections[i] === sectionId ? "" : " hidden");
+        }
+      }
 
-        // Auto-remove after 5 seconds
-        setTimeout(function () {
-          if (messageEl.parentNode) {
-            messageEl.parentNode.removeChild(messageEl);
+      function resetToUpload() {
+        isProcessing = false;
+        currentResults = null;
+        availableCollections = [];
+        selectedSourceCollection = null;
+        uploadedJsonData = null;
+        document.getElementById("loading-text").textContent =
+          "Parsing CSS file...";
+
+        // Reset source collection select
+        var sourceCollectionSelect = document.getElementById(
+          "source-collection-select"
+        );
+        sourceCollectionSelect.innerHTML =
+          '<option value="">Choose source collection...</option>';
+
+        // Reset target collection select
+        var targetCollectionSelect = document.getElementById(
+          "target-collection-select"
+        );
+        targetCollectionSelect.innerHTML =
+          '<option value="">Choose target collection...</option>';
+
+        // Reset JSON continue button
+        var continueBtn = document.getElementById("json-continue-btn");
+        if (continueBtn) {
+          continueBtn.disabled = true;
+          continueBtn.innerHTML = "Continue to Preview";
+        }
+
+        showSection("collection-section");
+        var fileInput = document.getElementById("file-input");
+        if (fileInput) fileInput.value = "";
+        var jsonFileInput = document.getElementById("json-file-input");
+        if (jsonFileInput) jsonFileInput.value = "";
+      }
+
+      function displayPreview(results) {
+        document.getElementById("preview-total").textContent =
+          results.totalFound;
+
+        populateVariableList(
+          "preview-variables",
+          "preview-variables-list",
+          results.variables,
+          "preview"
+        );
+
+        // Enable apply button if collections are selected
+        var sourceCollectionSelect = document.getElementById(
+          "source-collection-select"
+        );
+        var targetCollectionSelect = document.getElementById(
+          "target-collection-select"
+        );
+        var applyBtn = document.getElementById("apply-btn");
+
+        if (
+          sourceCollectionSelect.value &&
+          targetCollectionSelect.value &&
+          results.variables &&
+          results.variables.length > 0
+        ) {
+          applyBtn.disabled = false;
+        } else {
+          applyBtn.disabled = true;
+        }
+      }
+
+      function displayCreationResults(results) {
+        document.getElementById("created-count").textContent = results.created
+          ? results.created.length
+          : 0;
+        document.getElementById("updated-count").textContent = results.updated
+          ? results.updated.length
+          : 0;
+        document.getElementById("removed-count").textContent = 0; // Or handle if you plan to send 'removed'
+        document.getElementById("failed-count").textContent = results.failed
+          ? results.failed.length
+          : 0;
+
+        populateVariableList(
+          "results-created",
+          "results-created-list",
+          results.created || [],
+          "created"
+        );
+        populateVariableList(
+          "results-updated",
+          "results-updated-list",
+          results.updated || [],
+          "updated"
+        );
+        populateVariableList(
+          "results-removed", // This section might remain hidden if not used
+          "results-removed-list",
+          [], // No 'removed' data is currently sent
+          "removed"
+        );
+        populateVariableList(
+          "results-failed",
+          "results-failed-list",
+          results.failed || [],
+          "failed"
+        );
+      }
+
+      function populateVariableList(sectionId, listId, items, type) {
+        var section = document.getElementById(sectionId);
+        var list = document.getElementById(listId);
+
+        if (items && items.length > 0) {
+          list.innerHTML = "";
+
+          for (var i = 0; i < items.length; i++) {
+            list.appendChild(createVariableItem(items[i], type));
           }
-        }, 5000);
-      }
 
-      function clearMessages() {
-        messagesContainer.innerHTML = "";
-      }
+          // Update title with count
+          var title = section.querySelector(".result-title");
+          var existingCount = title.querySelector(".result-count");
+          if (existingCount) {
+            existingCount.remove();
+          }
+          var countSpan = document.createElement("span");
+          countSpan.className = "result-count";
+          countSpan.textContent =
+            items.length +
+            " " +
+            (type === "preview"
+              ? "variables"
+              : type === "created"
+              ? "created"
+              : type === "updated"
+              ? "updated"
+              : "failed");
+          title.appendChild(countSpan);
 
-      function escapeHtml(text) {
-        var div = document.createElement("div");
-        div.textContent = text;
-        return div.innerHTML;
-      }
-
-      // Message handler from plugin
-      window.onmessage = function (event) {
-        var msg = event.data.pluginMessage;
-        if (!msg) return;
-
-        console.log("📨 Received message:", msg.type);
-
-        switch (msg.type) {
-          case "collections-loaded":
-            if (msg.success) {
-              populateCollectionSelects(msg.collections);
-            } else {
-              showMessage("Error loading collections: " + msg.message, "error");
-            }
-            break;
-
-          case "audit-complete":
-            if (msg.success) {
-              displayAuditResults(msg.results);
-              showMessage("Audit completed successfully!", "success");
-            } else {
-              showSection("collection-selection");
-              showMessage("Audit failed: " + msg.message, "error");
-            }
-            break;
-
-          case "deletion-complete":
-            if (msg.success) {
-              var summary = msg.results.summary;
-              showMessage(
-                "Deleted " + summary.deleted + " variables successfully!",
-                "success"
-              );
-
-              if (summary.failed > 0) {
-                showMessage(
-                  "Failed to delete " + summary.failed + " variables.",
-                  "error"
-                );
-              }
-
-              // Refresh the audit
-              handleAudit();
-            } else {
-              showSection("results");
-              showMessage("Deletion failed: " + msg.message, "error");
-            }
-            break;
-
-          default:
-            console.warn("Unknown message type:", msg.type);
+          if (section) section.classList.remove("hidden");
+        } else {
+          if (section) section.classList.add("hidden");
         }
-      };
-
-      // Initialize when DOM is ready
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
-      } else {
-        init();
       }
 
-      console.log("✅ UI READY - Variable Opacity Auditor");
+      function createVariableItem(item, type) {
+        var div = document.createElement("div");
+        div.className = "variable-item";
+
+        // Variable name
+        var nameDiv = document.createElement("div");
+        nameDiv.className = "variable-name";
+        nameDiv.textContent = item.variableName;
+
+        // Variable references
+        var referencesDiv = document.createElement("div");
+        referencesDiv.className = "variable-references";
+
+        // Light mode reference
+        var lightRef = document.createElement("div");
+        lightRef.className = "reference-item";
+        lightRef.innerHTML =
+          '<span class="reference-label">Light:</span>' +
+          '<span class="reference-value">' +
+          item.lightReference +
+          "</span>";
+
+        // Dark mode reference
+        var darkRef = document.createElement("div");
+        darkRef.className = "reference-item";
+        darkRef.innerHTML =
+          '<span class="reference-label">Dark:</span>' +
+          '<span class="reference-value">' +
+          item.darkReference +
+          "</span>";
+
+        referencesDiv.appendChild(lightRef);
+        referencesDiv.appendChild(darkRef);
+
+        // For results, show which source variables were used
+        if (type === "created" || type === "updated") {
+          if (item.lightSourceVar) {
+            lightRef.innerHTML =
+              '<span class="reference-label">Light:</span>' +
+              '<span class="reference-value">' +
+              item.lightSourceVar +
+              "</span>";
+          }
+          if (item.darkSourceVar) {
+            darkRef.innerHTML =
+              '<span class="reference-label">Dark:</span>' +
+              '<span class="reference-value">' +
+              item.darkSourceVar +
+              "</span>";
+          }
+        }
+
+        // For failed items, show error
+        if (type === "failed" && item.error) {
+          var errorDiv = document.createElement("div");
+          errorDiv.className = "error-text";
+          errorDiv.textContent = "Error: " + item.error;
+          referencesDiv.appendChild(errorDiv);
+        }
+
+        div.appendChild(nameDiv);
+        div.appendChild(referencesDiv);
+
+        return div;
+      }
+
+      function displayError(message) {
+        console.error("Plugin error:", message);
+        document.getElementById("error-message").textContent = message;
+      }
     </script>
   </body>
 </html>

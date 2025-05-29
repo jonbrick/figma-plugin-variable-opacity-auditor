@@ -1,11 +1,11 @@
 {
-  "name": "Variable Opacity Auditor",
-  "id": "variable-opacity-auditor",
+  "name": "Opacity Variables Auditor",
+  "id": "opacity-variables-auditor",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
   "capabilities": [],
   "enableProposedApi": false,
   "editorType": ["figma"],
-  "permissions": ["currentuser"]
+  "permissions": ["currentuser", "teamlibrary"]
 }
